@@ -37,7 +37,7 @@ Sulpher offers a concise syntax for graph traversals and filtering.
 
 **Example Query**:
 
-```sql
+```cypher
 MATCH (user:User)-[:FRIENDS]->(friend:User)
 WHERE user.name = 'Alice'
 RETURN friend.name
@@ -139,20 +139,20 @@ update_node("users", 1, alice_update)
 Once the graph structure is created, you can perform queries using **Sulpher**.
 
 #### 5.1 Finding Friends of Friends (Up to Two Hops)
-```sql
+```cypher
 MATCH (user:User)-[:FRIENDS]->(friend:User)-[:FRIENDS]->(friend_of_friend:User)
 WHERE user.name = 'Alice'
 RETURN friend_of_friend.name
 ```
 
 #### 5.2 Finding Posts Written by Users in a Specific City
-```sql
+```cypher
 MATCH (user:User)-[:LIVES_IN]->(city:City {name: 'London'})-[:WROTE]->(post:Post)
 RETURN post.title
 ```
 
 #### 5.3 Counting Friends of a User
-```sql
+```cypher
 MATCH (user:User)-[:FRIENDS]->(friend:User)
 WHERE user.name = 'Alice'
 RETURN COUNT(friend) AS num_friends
