@@ -1,6 +1,3 @@
-Here’s a more structured and reader-friendly format for your content:
-
----
 
 # rserv: A Versatile Prototyping Tool  
 ### Part 5: Graph Database Features with Sulpher
