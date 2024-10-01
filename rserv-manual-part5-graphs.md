@@ -159,7 +159,7 @@ RETURN COUNT(friend) AS num_friends
 ```
 
 #### 5.4 Finding Users with Mutual Friends
-```sql
+```cypher
 MATCH (user1:User)-[:FRIENDS]->(mutualFriend:User)-[:FRIENDS]->(user2:User)
 WHERE user1.name = 'Alice' AND user2.name = 'Bob'
 RETURN mutualFriend.name
