@@ -373,7 +373,6 @@ print(result6)
 
 **Remember:**
 
-* Consult the official rserv 0.3.9 documentation for the latest information on Sulpher support. 
 * Keep in mind that the Sulpher implementation in rserv is evolving, and more advanced features may be added in future releases. 
 
 ---
