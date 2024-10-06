@@ -6,20 +6,21 @@
 | PATCH | `/api/v1/<entity>/<id>` | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ |
 | DELETE | `/api/v1/<entity>/<id>` | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ |
 | POST | `/api/v1/<entity>/save/<id>` | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ |
-| GET | `/api/v1/<entity>/list` |  |  |  |  |  | ✓ | ✓ | ✓ | ✓ | 
+| GET | `/api/v1/<entity>/list` |  | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ |
 | POST | `/api/v1/search` | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ |
 | POST | `/api/v1/graph/query` |  | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ |
 | GET | `/api/v1/graph/query/<query_id>` |  | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ |
 | GET | `/api/v1/graph/query/<query_id>/result` |  | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ |
-| GET | `/api/v1/graph/nodes/<node_id>` |  | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | 
+| GET | `/api/v1/graph/nodes/<node_id>` |  | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ |
 | POST | `/api/v1/graph/shortestPath` |  | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ |
 | POST | `/api/v1/graph/nodes/search` |  | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ |
 | POST | `/api/v1/graph/subgraph` |  | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ |
 | GET | `/api/v1/graph/nodes/<node_id>/relationships` |  | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ |
-| POST | `/api/v1/graph/commonNeighbors` |  | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | 
-| GET | `/api/v1/graph/nodes/<node_id>/degree` |  | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ |
-| POST | `/api/v1/graph/pathExists` |  | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ |
-| POST | `/api/v1/graph/nodes/neighborhoodAggregate` |  | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ |
-| GET | `/api/v1/graph/statistics` |  | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ |
+| POST | `/api/v1/graph/commonNeighbors` |  |  |  |  |  | ✓ | ✓ | ✓ | ✓ |
+| GET | `/api/v1/graph/nodes/<node_id>/degree` |  |  |  |  |  | ✓ | ✓ | ✓ | ✓ |
+| POST | `/api/v1/graph/pathExists` |  |  |  |  |  | ✓ | ✓ | ✓ | ✓ |
+| POST | `/api/v1/graph/nodes/neighborhoodAggregate` |  |  |  |  |  | ✓ | ✓ | ✓ | ✓ |
+| GET | `/api/v1/graph/statistics` |  |  |  |  |  | ✓ | ✓ | ✓ | ✓ |
 | GET | `/api/v1/graph/<node_ref>/in` |  | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ |
 | GET | `/api/v1/graph/<node_ref>/out` |  | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ |
+
