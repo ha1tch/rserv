@@ -27,7 +27,7 @@ rserv is ideal for:
 #### Prerequisites
 
 * **Python 3.7 or later:** rserv is written in Python and requires Python 3.7 or later to run.
-* **`rserv.py` File:** Download the `rserv.py` file from the official rserv repository ([https://github.com/your-repo-link-here](https://github.com/your-repo-link-here)).
+* **`rserv.py` File:** Download the `rserv.py` file from the official rserv repository ([https://github.com/ha1tch/rserv](https://github.com/ha1tch/rserv)).
 
 #### Running rserv
 
