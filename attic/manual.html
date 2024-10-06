@@ -1,0 +1,923 @@
+<h1 id="rserv-0.2.2-user-manual">rserv 0.2.2 User Manual</h1>
+<h2 id="table-of-contents">Table of Contents</h2>
+<ol type="1">
+<li><a href="#1-introduction">Introduction</a></li>
+<li><a href="#2-installation">Installation</a></li>
+<li><a href="#3-configuration">Configuration</a></li>
+<li><a href="#4-running-the-server">Running the Server</a></li>
+<li><a href="#5-schema-management">Schema Management</a></li>
+<li><a href="#6-api-endpoints">API Endpoints</a></li>
+<li><a href="#7-usage-examples">Usage Examples</a></li>
+<li><a href="#8-design-decisions">Design Decisions</a></li>
+<li><a href="#9-data-storage-and-management">Data Storage and
+Management</a></li>
+<li><a href="#10-performance-considerations">Performance
+Considerations</a></li>
+<li><a href="#11-security-notes">Security Notes</a></li>
+<li><a href="#12-troubleshooting">Troubleshooting</a></li>
+<li><a href="#13-best-practices">Best Practices</a></li>
+<li><a href="#14-frequently-asked-questions">Frequently Asked
+Questions</a></li>
+<li><a href="#15-glossary">Glossary</a></li>
+</ol>
+<h2 id="introduction">1. Introduction</h2>
+<p>rserv is a lightweight, flexible REST prototyping server designed for
+managing JSON documents. It provides a simple yet powerful API for
+creating, reading, updating, and deleting individual documents within
+entities, as well as advanced listing and searching capabilities across
+these documents. rserv is ideal for rapid prototyping, testing, and
+development of applications that require a backend without the
+complexity of a full database system.</p>
+<h3 id="motivation">Motivation</h3>
+<p>The development of rserv was driven by the need for a tool that
+combines simplicity, flexibility, and a rich feature set in a compact,
+easily deployable package. At the time of its creation, there was a gap
+in the landscape of REST API prototyping tools:</p>
+<ol type="1">
+<li>Some tools offered simplicity but limited functionality (e.g., JSON
+Server).</li>
+<li>Others provided extensive features but required complex setup or
+were part of larger frameworks (e.g., FastAPI, Flask-RESTful).</li>
+<li>Many commercial solutions were neither open-source nor
+self-contained.</li>
+</ol>
+<p>rserv aims to fill this gap by offering a unique combination of
+features in a single, self-contained Python file:</p>
+<ul>
+<li>Complete CRUD operations</li>
+<li>Pagination and sorting</li>
+<li>Full-text search capabilities</li>
+<li>Simple in-memory caching</li>
+<li>Flexible configuration options</li>
+<li>File-based storage for easy data inspection and manipulation</li>
+<li>Schema-less and schema-enforced modes</li>
+<li>Cascading deletes (optional)</li>
+</ul>
+<p>This combination makes rserv stand out among REST API prototyping
+tools. It’s more customizable than many “no-code” solutions, yet simpler
+to set up than full-fledged frameworks. This makes it particularly
+suitable for scenarios where a lightweight, yet feature-rich solution is
+needed for quick prototyping, testing, or development.</p>
+<h3 id="key-concepts">Key Concepts</h3>
+<h4 id="entities-and-documents">Entities and Documents</h4>
+<p>In the context of rserv: - An <strong>entity</strong> represents a
+collection or category of data, similar to a table in a relational
+database or a collection in a document database. For example, “users” or
+“products” could be entities. Entities in rserv are created implicitly
+when the first document of that type is added. - A
+<strong>document</strong> (also referred to as an object) is a specific
+instance within an entity, containing the actual data. It’s analogous to
+a row in a relational database or a document in a document database. For
+example, a specific user’s data would be a document within the “users”
+entity.</p>
+<h4 id="rest-resources-and-their-mapping-to-documents">REST Resources
+and Their Mapping to Documents</h4>
+<p>REST (Representational State Transfer) is an architectural style for
+designing networked applications. In REST: - A <strong>resource</strong>
+is any named information that can be identified, addressed, and
+manipulated. Resources are the key abstractions in REST. - In rserv,
+each document is treated as a REST resource. The URL path identifies the
+entity type and the specific document within that entity. - For example,
+<code>/api/v1/users/123</code> represents the resource that is the user
+document with ID 123 within the users entity.</p>
+<p>This mapping allows RESTful operations to be performed on individual
+documents: - GET retrieves a document - POST creates a new document -
+PUT updates an entire document - PATCH partially updates a document -
+DELETE removes a document</p>
+<p>Collections of documents (e.g., all users) are also treated as
+resources, accessible via paths like <code>/api/v1/users</code>.</p>
+<h3 id="key-features-of-rserv">Key Features of rserv</h3>
+<ul>
+<li><strong>Simple file-based storage</strong>: Each document is stored
+as an individual JSON file within its corresponding entity
+directory.</li>
+<li><strong>Flexible document management</strong>: rserv doesn’t enforce
+a strict schema by default, allowing for dynamic and flexible document
+structures within each entity.</li>
+<li><strong>Schema support</strong>: Optional schema validation can be
+enabled to enforce data structure and integrity.</li>
+<li><strong>Implicit entity creation</strong>: Entities are
+automatically created when the first document for that entity type is
+added.</li>
+<li><strong>Configurable caching</strong>: Improves performance for
+repeated queries on documents.</li>
+<li><strong>Customizable pagination and sorting</strong>: Efficiently
+handle large collections of documents within an entity.</li>
+<li><strong>Full-text search capabilities</strong>: Search across
+documents within an entity.</li>
+<li><strong>Support for various HTTP methods</strong>: Implements GET,
+POST, PUT, PATCH, and DELETE for comprehensive document
+manipulation.</li>
+<li><strong>Cascading deletes</strong>: Optional feature to
+automatically delete related documents to maintain referential
+integrity.</li>
+</ul>
+<p>rserv abstracts the file-based storage behind a RESTful API, allowing
+developers to interact with it as if it were a more traditional
+database-backed API. This makes it an excellent tool for prototyping and
+testing RESTful applications before moving to a more robust backend
+system.</p>
+<h2 id="installation">2. Installation</h2>
+<h3 id="prerequisites">Prerequisites</h3>
+<ul>
+<li>Python 3.7 or higher</li>
+<li>pip (Python package manager)</li>
+</ul>
+<h3 id="steps">Steps</h3>
+<ol type="1">
+<li><p>Download the rserv.py file to your desired location.</p></li>
+<li><p>Open a terminal and navigate to the directory containing
+rserv.py.</p></li>
+<li><p>Install the required dependencies:</p>
+<pre><code>pip install flask python-dotenv</code></pre></li>
+</ol>
+<p>Note: rserv will automatically attempt to install missing
+dependencies when run for the first time.</p>
+<h2 id="configuration">3. Configuration</h2>
+<p>rserv offers multiple configuration methods with the following order
+of precedence:</p>
+<ol type="1">
+<li>Command-line arguments</li>
+<li>Environment variables</li>
+<li>Configuration file (.env, .rserv.conf, or rserv.conf)</li>
+<li>Default values</li>
+</ol>
+<h3 id="configuration-options">Configuration Options</h3>
+<ul>
+<li><code>host</code>: Server host (default: 0.0.0.0)</li>
+<li><code>port</code>: Server port (default: 9090)</li>
+<li><code>patch_null</code>: How to handle null values in PATCH requests
+(options: ‘store’ or ‘delete’, default: ‘store’)</li>
+<li><code>cache_ttl</code>: Cache Time To Live in seconds (default:
+300)</li>
+<li><code>default_page_size</code>: Default page size for pagination
+(default: 10)</li>
+<li><code>schema</code>: Name of the schema to use (default:
+‘default’)</li>
+<li><code>cascading_delete</code>: Enable cascading deletes for
+referential integrity (default: false)</li>
+<li><code>list_schemas</code>: List available schemas and exit (boolean,
+default: false)</li>
+</ul>
+<h3 id="using-a-configuration-file">Using a Configuration File</h3>
+<p>Create a file named <code>.env</code>, <code>.rserv.conf</code>, or
+<code>rserv.conf</code> in the same directory as rserv.py with the
+following content:</p>
+<pre><code>HOST=localhost
+PORT=8080
+PATCH_NULL=delete
+CACHE_TTL=600
+DEFAULT_PAGE_SIZE=20
+SCHEMA=my_schema
+CASCADING_DELETE=true</code></pre>
+<h2 id="running-the-server">4. Running the Server</h2>
+<p>To start the server with default settings (schema-less mode):</p>
+<pre><code>python rserv.py</code></pre>
+<p>To use a specific schema:</p>
+<pre><code>python rserv.py --schema myschema</code></pre>
+<p>To use command-line arguments:</p>
+<pre><code>python rserv.py --host localhost --port 8080 --patch-null delete --cache-ttl 600 --page-size 20 --schema myschema --cascading-delete</code></pre>
+<p>To list available schemas:</p>
+<pre><code>python rserv.py --list-schemas</code></pre>
+<p>Upon startup, rserv will display an ASCII art banner with the version
+number, a brief description, and the current configuration, including
+the schema being used.</p>
+<h2 id="schema-management">5. Schema Management</h2>
+<p>rserv supports both schema-less and schema-enforced modes of
+operation, providing flexibility for different stages of
+development.</p>
+<h3 id="schema-less-mode">Schema-less Mode</h3>
+<p>By default, rserv operates in schema-less mode. This mode is ideal
+for rapid prototyping and early stages of development when the data
+structure is not yet finalized.</p>
+<ul>
+<li>No predefined schema is required.</li>
+<li>Any JSON structure can be stored for any entity.</li>
+<li>Data is stored in <code>./data/default/</code> directory.</li>
+</ul>
+<p>To run in schema-less mode:</p>
+<pre><code>python rserv.py</code></pre>
+<h3 id="schema-enforced-mode">Schema-enforced Mode</h3>
+<p>In schema-enforced mode, rserv validates incoming data against a
+predefined schema. This mode is useful when you have a stable data
+structure and want to ensure data consistency.</p>
+<ul>
+<li>Schemas are defined as JSON files in the
+<code>./schema/&lt;schema_name&gt;/</code> directory.</li>
+<li>Each entity’s schema is defined in a separate JSON file (e.g.,
+<code>users.json</code>, <code>products.json</code>).</li>
+<li>Data is stored in <code>./data/&lt;schema_name&gt;/</code>
+directory.</li>
+</ul>
+<p>To run with a specific schema:</p>
+<pre><code>python rserv.py --schema myschema</code></pre>
+<h3 id="schema-definition">Schema Definition</h3>
+<p>Schemas are defined using JSON files. Here’s an example schema for a
+“users” entity:</p>
+<div class="sourceCode" id="cb9"><pre
+class="sourceCode json"><code class="sourceCode json"><span id="cb9-1"><a href="#cb9-1" aria-hidden="true" tabindex="-1"></a><span class="fu">{</span></span>
+<span id="cb9-2"><a href="#cb9-2" aria-hidden="true" tabindex="-1"></a>  <span class="dt">&quot;username&quot;</span><span class="fu">:</span> <span class="fu">{</span><span class="dt">&quot;type&quot;</span><span class="fu">:</span> <span class="st">&quot;string&quot;</span><span class="fu">,</span> <span class="dt">&quot;required&quot;</span><span class="fu">:</span> <span class="kw">true</span><span class="fu">,</span> <span class="dt">&quot;max_length&quot;</span><span class="fu">:</span> <span class="dv">50</span><span class="fu">},</span></span>
+<span id="cb9-3"><a href="#cb9-3" aria-hidden="true" tabindex="-1"></a>  <span class="dt">&quot;email&quot;</span><span class="fu">:</span> <span class="fu">{</span><span class="dt">&quot;type&quot;</span><span class="fu">:</span> <span class="st">&quot;string&quot;</span><span class="fu">,</span> <span class="dt">&quot;required&quot;</span><span class="fu">:</span> <span class="kw">true</span><span class="fu">,</span> <span class="dt">&quot;max_length&quot;</span><span class="fu">:</span> <span class="dv">100</span><span class="fu">},</span></span>
+<span id="cb9-4"><a href="#cb9-4" aria-hidden="true" tabindex="-1"></a>  <span class="dt">&quot;age&quot;</span><span class="fu">:</span> <span class="fu">{</span><span class="dt">&quot;type&quot;</span><span class="fu">:</span> <span class="st">&quot;integer&quot;</span><span class="fu">,</span> <span class="dt">&quot;required&quot;</span><span class="fu">:</span> <span class="kw">false</span><span class="fu">},</span></span>
+<span id="cb9-5"><a href="#cb9-5" aria-hidden="true" tabindex="-1"></a>  <span class="dt">&quot;is_active&quot;</span><span class="fu">:</span> <span class="fu">{</span><span class="dt">&quot;type&quot;</span><span class="fu">:</span> <span class="st">&quot;boolean&quot;</span><span class="fu">,</span> <span class="dt">&quot;required&quot;</span><span class="fu">:</span> <span class="kw">true</span><span class="fu">}</span></span>
+<span id="cb9-6"><a href="#cb9-6" aria-hidden="true" tabindex="-1"></a><span class="fu">}</span></span></code></pre></div>
+<h3 id="foreign-key-constraints">Foreign Key Constraints</h3>
+<p>rserv supports foreign key constraints in schema definitions. Here’s
+an example of how to define schemas with foreign key constraints:</p>
+<ol type="1">
+<li>Users schema (<code>users.json</code>):</li>
+</ol>
+<div class="sourceCode" id="cb10"><pre
+class="sourceCode json"><code class="sourceCode json"><span id="cb10-1"><a href="#cb10-1" aria-hidden="true" tabindex="-1"></a><span class="fu">{</span></span>
+<span id="cb10-2"><a href="#cb10-2" aria-hidden="true" tabindex="-1"></a>  <span class="dt">&quot;user_id&quot;</span><span class="fu">:</span> <span class="fu">{</span><span class="dt">&quot;type&quot;</span><span class="fu">:</span> <span class="st">&quot;integer&quot;</span><span class="fu">,</span> <span class="dt">&quot;required&quot;</span><span class="fu">:</span> <span class="kw">true</span><span class="fu">,</span> <span class="dt">&quot;primary_key&quot;</span><span class="fu">:</span> <span class="kw">true</span><span class="fu">},</span></span>
+<span id="cb10-3"><a href="#cb10-3" aria-hidden="true" tabindex="-1"></a>  <span class="dt">&quot;username&quot;</span><span class="fu">:</span> <span class="fu">{</span><span class="dt">&quot;type&quot;</span><span class="fu">:</span> <span class="st">&quot;string&quot;</span><span class="fu">,</span> <span class="dt">&quot;required&quot;</span><span class="fu">:</span> <span class="kw">true</span><span class="fu">,</span> <span class="dt">&quot;max_length&quot;</span><span class="fu">:</span> <span class="dv">50</span><span class="fu">},</span></span>
+<span id="cb10-4"><a href="#cb10-4" aria-hidden="true" tabindex="-1"></a>  <span class="dt">&quot;email&quot;</span><span class="fu">:</span> <span class="fu">{</span><span class="dt">&quot;type&quot;</span><span class="fu">:</span> <span class="st">&quot;string&quot;</span><span class="fu">,</span> <span class="dt">&quot;required&quot;</span><span class="fu">:</span> <span class="kw">true</span><span class="fu">,</span> <span class="dt">&quot;max_length&quot;</span><span class="fu">:</span> <span class="dv">100</span><span class="fu">},</span></span>
+<span id="cb10-5"><a href="#cb10-5" aria-hidden="true" tabindex="-1"></a>  <span class="dt">&quot;is_active&quot;</span><span class="fu">:</span> <span class="fu">{</span><span class="dt">&quot;type&quot;</span><span class="fu">:</span> <span class="st">&quot;boolean&quot;</span><span class="fu">,</span> <span class="dt">&quot;required&quot;</span><span class="fu">:</span> <span class="kw">true</span><span class="fu">}</span></span>
+<span id="cb10-6"><a href="#cb10-6" aria-hidden="true" tabindex="-1"></a><span class="fu">}</span></span></code></pre></div>
+<ol start="2" type="1">
+<li>Posts schema (<code>posts.json</code>) with a foreign key reference
+to users:</li>
+</ol>
+<div class="sourceCode" id="cb11"><pre
+class="sourceCode json"><code class="sourceCode json"><span id="cb11-1"><a href="#cb11-1" aria-hidden="true" tabindex="-1"></a><span class="fu">{</span></span>
+<span id="cb11-2"><a href="#cb11-2" aria-hidden="true" tabindex="-1"></a>  <span class="dt">&quot;post_id&quot;</span><span class="fu">:</span> <span class="fu">{</span><span class="dt">&quot;type&quot;</span><span class="fu">:</span> <span class="st">&quot;integer&quot;</span><span class="fu">,</span> <span class="dt">&quot;required&quot;</span><span class="fu">:</span> <span class="kw">true</span><span class="fu">,</span> <span class="dt">&quot;primary_key&quot;</span><span class="fu">:</span> <span class="kw">true</span><span class="fu">},</span></span>
+<span id="cb11-3"><a href="#cb11-3" aria-hidden="true" tabindex="-1"></a>  <span class="dt">&quot;title&quot;</span><span class="fu">:</span> <span class="fu">{</span><span class="dt">&quot;type&quot;</span><span class="fu">:</span> <span class="st">&quot;string&quot;</span><span class="fu">,</span> <span class="dt">&quot;required&quot;</span><span class="fu">:</span> <span class="kw">true</span><span class="fu">,</span> <span class="dt">&quot;max_length&quot;</span><span class="fu">:</span> <span class="dv">200</span><span class="fu">},</span></span>
+<span id="cb11-4"><a href="#cb11-4" aria-hidden="true" tabindex="-1"></a>  <span class="dt">&quot;content&quot;</span><span class="fu">:</span> <span class="fu">{</span><span class="dt">&quot;type&quot;</span><span class="fu">:</span> <span class="st">&quot;string&quot;</span><span class="fu">,</span> <span class="dt">&quot;required&quot;</span><span class="fu">:</span> <span class="kw">true</span><span class="fu">},</span></span>
+<span id="cb11-5"><a href="#cb11-5" aria-hidden="true" tabindex="-1"></a>  <span class="dt">&quot;author_id&quot;</span><span class="fu">:</span> <span class="fu">{</span></span>
+<span id="cb11-6"><a href="#cb11-6" aria-hidden="true" tabindex="-1"></a>    <span class="dt">&quot;type&quot;</span><span class="fu">:</span> <span class="st">&quot;integer&quot;</span><span class="fu">,</span> </span>
+<span id="cb11-7"><a href="#cb11-7" aria-hidden="true" tabindex="-1"></a>    <span class="dt">&quot;required&quot;</span><span class="fu">:</span> <span class="kw">true</span><span class="fu">,</span> </span>
+<span id="cb11-8"><a href="#cb11-8" aria-hidden="true" tabindex="-1"></a>    <span class="dt">&quot;foreign_key&quot;</span><span class="fu">:</span> <span class="fu">{</span><span class="dt">&quot;entity&quot;</span><span class="fu">:</span> <span class="st">&quot;users&quot;</span><span class="fu">,</span> <span class="dt">&quot;field&quot;</span><span class="fu">:</span> <span class="st">&quot;user_id&quot;</span><span class="fu">}</span></span>
+<span id="cb11-9"><a href="#cb11-9" aria-hidden="true" tabindex="-1"></a>  <span class="fu">},</span></span>
+<span id="cb11-10"><a href="#cb11-10" aria-hidden="true" tabindex="-1"></a>  <span class="dt">&quot;created_at&quot;</span><span class="fu">:</span> <span class="fu">{</span><span class="dt">&quot;type&quot;</span><span class="fu">:</span> <span class="st">&quot;datetime&quot;</span><span class="fu">,</span> <span class="dt">&quot;required&quot;</span><span class="fu">:</span> <span class="kw">true</span><span class="fu">}</span></span>
+<span id="cb11-11"><a href="#cb11-11" aria-hidden="true" tabindex="-1"></a><span class="fu">}</span></span></code></pre></div>
+<h3 id="complex-schema-examples">Complex Schema Examples</h3>
+<p>Here are two more examples of complex schema definitions:</p>
+<ol type="1">
+<li>Product Inventory Schema:</li>
+</ol>
+<div class="sourceCode" id="cb12"><pre
+class="sourceCode json"><code class="sourceCode json"><span id="cb12-1"><a href="#cb12-1" aria-hidden="true" tabindex="-1"></a><span class="fu">{</span></span>
+<span id="cb12-2"><a href="#cb12-2" aria-hidden="true" tabindex="-1"></a>  <span class="dt">&quot;product_id&quot;</span><span class="fu">:</span> <span class="fu">{</span><span class="dt">&quot;type&quot;</span><span class="fu">:</span> <span class="st">&quot;integer&quot;</span><span class="fu">,</span> <span class="dt">&quot;required&quot;</span><span class="fu">:</span> <span class="kw">true</span><span class="fu">,</span> <span class="dt">&quot;primary_key&quot;</span><span class="fu">:</span> <span class="kw">true</span><span class="fu">},</span></span>
+<span id="cb12-3"><a href="#cb12-3" aria-hidden="true" tabindex="-1"></a>  <span class="dt">&quot;name&quot;</span><span class="fu">:</span> <span class="fu">{</span><span class="dt">&quot;type&quot;</span><span class="fu">:</span> <span class="st">&quot;string&quot;</span><span class="fu">,</span> <span class="dt">&quot;required&quot;</span><span class="fu">:</span> <span class="kw">true</span><span class="fu">,</span> <span class="dt">&quot;max_length&quot;</span><span class="fu">:</span> <span class="dv">100</span><span class="fu">},</span></span>
+<span id="cb12-4"><a href="#cb12-4" aria-hidden="true" tabindex="-1"></a>  <span class="dt">&quot;description&quot;</span><span class="fu">:</span> <span class="fu">{</span><span class="dt">&quot;type&quot;</span><span class="fu">:</span> <span class="st">&quot;string&quot;</span><span class="fu">,</span> <span class="dt">&quot;required&quot;</span><span class="fu">:</span> <span class="kw">false</span><span class="fu">,</span> <span class="dt">&quot;max_length&quot;</span><span class="fu">:</span> <span class="dv">1000</span><span class="fu">},</span></span>
+<span id="cb12-5"><a href="#cb12-5" aria-hidden="true" tabindex="-1"></a>  <span class="dt">&quot;price&quot;</span><span class="fu">:</span> <span class="fu">{</span><span class="dt">&quot;type&quot;</span><span class="fu">:</span> <span class="st">&quot;float&quot;</span><span class="fu">,</span> <span class="dt">&quot;required&quot;</span><span class="fu">:</span> <span class="kw">true</span><span class="fu">},</span></span>
+<span id="cb12-6"><a href="#cb12-6" aria-hidden="true" tabindex="-1"></a>  <span class="dt">&quot;category&quot;</span><span class="fu">:</span> <span class="fu">{</span><span class="dt">&quot;type&quot;</span><span class="fu">:</span> <span class="st">&quot;string&quot;</span><span class="fu">,</span> <span class="dt">&quot;required&quot;</span><span class="fu">:</span> <span class="kw">true</span><span class="fu">},</span></span>
+<span id="cb12-7"><a href="#cb12-7" aria-hidden="true" tabindex="-1"></a>  <span class="dt">&quot;tags&quot;</span><span class="fu">:</span> <span class="fu">{</span><span class="dt">&quot;type&quot;</span><span class="fu">:</span> <span class="st">&quot;json&quot;</span><span class="fu">,</span> <span class="dt">&quot;required&quot;</span><span class="fu">:</span> <span class="kw">false</span><span class="fu">},</span></span>
+<span id="cb12-8"><a href="#cb12-8" aria-hidden="true" tabindex="-1"></a>  <span class="dt">&quot;in_stock&quot;</span><span class="fu">:</span> <span class="fu">{</span><span class="dt">&quot;type&quot;</span><span class="fu">:</span> <span class="st">&quot;boolean&quot;</span><span class="fu">,</span> <span class="dt">&quot;required&quot;</span><span class="fu">:</span> <span class="kw">true</span><span class="fu">},</span></span>
+<span id="cb12-9"><a href="#cb12-9" aria-hidden="true" tabindex="-1"></a>  <span class="dt">&quot;supplier&quot;</span><span class="fu">:</span> <span class="fu">{</span></span>
+<span id="cb12-10"><a href="#cb12-10" aria-hidden="true" tabindex="-1"></a>    <span class="dt">&quot;type&quot;</span><span class="fu">:</span> <span class="st">&quot;json&quot;</span><span class="fu">,</span></span>
+<span id="cb12-11"><a href="#cb12-11" aria-hidden="true" tabindex="-1"></a>    <span class="dt">&quot;required&quot;</span><span class="fu">:</span> <span class="kw">true</span><span class="fu">,</span></span>
+<span id="cb12-12"><a href="#cb12-12" aria-hidden="true" tabindex="-1"></a>    <span class="dt">&quot;schema&quot;</span><span class="fu">:</span> <span class="fu">{</span></span>
+<span id="cb12-13"><a href="#cb12-13" aria-hidden="true" tabindex="-1"></a>      <span class="dt">&quot;name&quot;</span><span class="fu">:</span> <span class="fu">{</span><span class="dt">&quot;type&quot;</span><span class="fu">:</span> <span class="st">&quot;string&quot;</span><span class="fu">,</span> <span class="dt">&quot;required&quot;</span><span class="fu">:</span> <span class="kw">true</span><span class="fu">},</span></span>
+<span id="cb12-14"><a href="#cb12-14" aria-hidden="true" tabindex="-1"></a>      <span class="dt">&quot;contact_email&quot;</span><span class="fu">:</span> <span class="fu">{</span><span class="dt">&quot;type&quot;</span><span class="fu">:</span> <span class="st">&quot;string&quot;</span><span class="fu">,</span> <span class="dt">&quot;required&quot;</span><span class="fu">:</span> <span class="kw">true</span><span class="fu">},</span></span>
+<span id="cb12-15"><a href="#cb12-15" aria-hidden="true" tabindex="-1"></a>      <span class="dt">&quot;phone&quot;</span><span class="fu">:</span> <span class="fu">{</span><span class="dt">&quot;type&quot;</span><span class="fu">:</span> <span class="st">&quot;string&quot;</span><span class="fu">,</span> <span class="dt">&quot;required&quot;</span><span class="fu">:</span> <span class="kw">false</span><span class="fu">}</span></span>
+<span id="cb12-16"><a href="#cb12-16" aria-hidden="true" tabindex="-1"></a>    <span class="fu">}</span></span>
+<span id="cb12-17"><a href="#cb12-17" aria-hidden="true" tabindex="-1"></a>  <span class="fu">},</span></span>
+<span id="cb12-18"><a href="#cb12-18" aria-hidden="true" tabindex="-1"></a>  <span class="dt">&quot;last_restock_date&quot;</span><span class="fu">:</span> <span class="fu">{</span><span class="dt">&quot;type&quot;</span><span class="fu">:</span> <span class="st">&quot;date&quot;</span><span class="fu">,</span> <span class="dt">&quot;required&quot;</span><span class="fu">:</span> <span class="kw">false</span><span class="fu">},</span></span>
+<span id="cb12-19"><a href="#cb12-19" aria-hidden="true" tabindex="-1"></a>  <span class="dt">&quot;sales_history&quot;</span><span class="fu">:</span> <span class="fu">{</span></span>
+<span id="cb12-20"><a href="#cb12-20" aria-hidden="true" tabindex="-1"></a>    <span class="dt">&quot;type&quot;</span><span class="fu">:</span> <span class="st">&quot;json&quot;</span><span class="fu">,</span></span>
+<span id="cb12-21"><a href="#cb12-21" aria-hidden="true" tabindex="-1"></a>    <span class="dt">&quot;required&quot;</span><span class="fu">:</span> <span class="kw">false</span><span class="fu">,</span></span>
+<span id="cb12-22"><a href="#cb12-22" aria-hidden="true" tabindex="-1"></a>    <span class="dt">&quot;schema&quot;</span><span class="fu">:</span> <span class="fu">{</span></span>
+<span id="cb12-23"><a href="#cb12-23" aria-hidden="true" tabindex="-1"></a>      <span class="dt">&quot;total_sales&quot;</span><span class="fu">:</span> <span class="fu">{</span><span class="dt">&quot;type&quot;</span><span class="fu">:</span> <span class="st">&quot;integer&quot;</span><span class="fu">,</span> <span class="dt">&quot;required&quot;</span><span class="fu">:</span> <span class="kw">true</span><span class="fu">},</span></span>
+<span id="cb12-24"><a href="#cb12-24" aria-hidden="true" tabindex="-1"></a>      <span class="dt">&quot;last_sale_date&quot;</span><span class="fu">:</span> <span class="fu">{</span><span class="dt">&quot;type&quot;</span><span class="fu">:</span> <span class="st">&quot;datetime&quot;</span><span class="fu">,</span> <span class="dt">&quot;required&quot;</span><span class="fu">:</span> <span class="kw">false</span><span class="fu">}</span></span>
+<span id="cb12-25"><a href="#cb12-25" aria-hidden="true" tabindex="-1"></a>    <span class="fu">}</span></span>
+<span id="cb12-26"><a href="#cb12-26" aria-hidden="true" tabindex="-1"></a>  <span class="fu">}</span></span>
+<span id="cb12-27"><a href="#cb12-27" aria-hidden="true" tabindex="-1"></a><span class="fu">}</span></span></code></pre></div>
+<ol start="2" type="1">
+<li>Event Management Schema:</li>
+</ol>
+<div class="sourceCode" id="cb13"><pre
+class="sourceCode json"><code class="sourceCode json"><span id="cb13-1"><a href="#cb13-1" aria-hidden="true" tabindex="-1"></a><span class="fu">{</span></span>
+<span id="cb13-2"><a href="#cb13-2" aria-hidden="true" tabindex="-1"></a>  <span class="dt">&quot;event_id&quot;</span><span class="fu">:</span> <span class="fu">{</span><span class="dt">&quot;type&quot;</span><span class="fu">:</span> <span class="st">&quot;integer&quot;</span><span class="fu">,</span> <span class="dt">&quot;required&quot;</span><span class="fu">:</span> <span class="kw">true</span><span class="fu">,</span> <span class="dt">&quot;primary_key&quot;</span><span class="fu">:</span> <span class="kw">true</span><span class="fu">},</span></span>
+<span id="cb13-3"><a href="#cb13-3" aria-hidden="true" tabindex="-1"></a>  <span class="dt">&quot;title&quot;</span><span class="fu">:</span> <span class="fu">{</span><span class="dt">&quot;type&quot;</span><span class="fu">:</span> <span class="st">&quot;string&quot;</span><span class="fu">,</span> <span class="dt">&quot;required&quot;</span><span class="fu">:</span> <span class="kw">true</span><span class="fu">,</span> <span class="dt">&quot;max_length&quot;</span><span class="fu">:</span> <span class="dv">200</span><span class="fu">},</span></span>
+<span id="cb13-4"><a href="#cb13-4" aria-hidden="true" tabindex="-1"></a>  <span class="dt">&quot;description&quot;</span><span class="fu">:</span> <span class="fu">{</span><span class="dt">&quot;type&quot;</span><span class="fu">:</span> <span class="st">&quot;string&quot;</span><span class="fu">,</span> <span class="dt">&quot;required&quot;</span><span class="fu">:</span> <span class="kw">false</span><span class="fu">},</span></span>
+<span id="cb13-5"><a href="#cb13-5" aria-hidden="true" tabindex="-1"></a>  <span class="dt">&quot;start_date&quot;</span><span class="fu">:</span> <span class="fu">{</span><span class="dt">&quot;type&quot;</span><span class="fu">:</span> <span class="st">&quot;datetime&quot;</span><span class="fu">,</span> <span class="dt">&quot;required&quot;</span><span class="fu">:</span> <span class="kw">true</span><span class="fu">},</span></span>
+<span id="cb13-6"><a href="#cb13-6" aria-hidden="true" tabindex="-1"></a>  <span class="dt">&quot;end_date&quot;</span><span class="fu">:</span> <span class="fu">{</span><span class="dt">&quot;type&quot;</span><span class="fu">:</span> <span class="st">&quot;datetime&quot;</span><span class="fu">,</span> <span class="dt">&quot;required&quot;</span><span class="fu">:</span> <span class="kw">true</span><span class="fu">},</span></span>
+<span id="cb13-7"><a href="#cb13-7" aria-hidden="true" tabindex="-1"></a>  <span class="dt">&quot;location&quot;</span><span class="fu">:</span> <span class="fu">{</span></span>
+<span id="cb13-8"><a href="#cb13-8" aria-hidden="true" tabindex="-1"></a>    <span class="dt">&quot;type&quot;</span><span class="fu">:</span> <span class="st">&quot;json&quot;</span><span class="fu">,</span></span>
+<span id="cb13-9"><a href="#cb13-9" aria-hidden="true" tabindex="-1"></a>    <span class="dt">&quot;required&quot;</span><span class="fu">:</span> <span class="kw">true</span><span class="fu">,</span></span>
+<span id="cb13-10"><a href="#cb13-10" aria-hidden="true" tabindex="-1"></a>    <span class="dt">&quot;schema&quot;</span><span class="fu">:</span> <span class="fu">{</span></span>
+<span id="cb13-11"><a href="#cb13-11" aria-hidden="true" tabindex="-1"></a>      <span class="dt">&quot;venue&quot;</span><span class="fu">:</span> <span class="fu">{</span><span class="dt">&quot;type&quot;</span><span class="fu">:</span> <span class="st">&quot;string&quot;</span><span class="fu">,</span> <span class="dt">&quot;required&quot;</span><span class="fu">:</span> <span class="kw">true</span><span class="fu">},</span></span>
+<span id="cb13-12"><a href="#cb13-12" aria-hidden="true" tabindex="-1"></a>      <span class="dt">&quot;address&quot;</span><span class="fu">:</span> <span class="fu">{</span><span class="dt">&quot;type&quot;</span><span class="fu">:</span> <span class="st">&quot;string&quot;</span><span class="fu">,</span> <span class="dt">&quot;required&quot;</span><span class="fu">:</span> <span class="kw">true</span><span class="fu">},</span></span>
+<span id="cb13-13"><a href="#cb13-13" aria-hidden="true" tabindex="-1"></a>      <span class="dt">&quot;city&quot;</span><span class="fu">:</span> <span class="fu">{</span><span class="dt">&quot;type&quot;</span><span class="fu">:</span> <span class="st">&quot;string&quot;</span><span class="fu">,</span> <span class="dt">&quot;required&quot;</span><span class="fu">:</span> <span class="kw">true</span><span class="fu">},</span></span>
+<span id="cb13-14"><a href="#cb13-14" aria-hidden="true" tabindex="-1"></a>      <span class="dt">&quot;country&quot;</span><span class="fu">:</span> <span class="fu">{</span><span class="dt">&quot;type&quot;</span><span class="fu">:</span> <span class="st">&quot;string&quot;</span><span class="fu">,</span> <span class="dt">&quot;required&quot;</span><span class="fu">:</span> <span class="kw">true</span><span class="fu">},</span></span>
+<span id="cb13-15"><a href="#cb13-15" aria-hidden="true" tabindex="-1"></a>      <span class="dt">&quot;coordinates&quot;</span><span class="fu">:</span> <span class="fu">{</span></span>
+<span id="cb13-16"><a href="#cb13-16" aria-hidden="true" tabindex="-1"></a>        <span class="dt">&quot;type&quot;</span><span class="fu">:</span> <span class="st">&quot;json&quot;</span><span class="fu">,</span></span>
+<span id="cb13-17"><a href="#cb13-17" aria-hidden="true" tabindex="-1"></a>        <span class="dt">&quot;required&quot;</span><span class="fu">:</span> <span class="kw">false</span><span class="fu">,</span></span>
+<span id="cb13-18"><a href="#cb13-18" aria-hidden="true" tabindex="-1"></a>        <span class="dt">&quot;schema&quot;</span><span class="fu">:</span> <span class="fu">{</span></span>
+<span id="cb13-19"><a href="#cb13-19" aria-hidden="true" tabindex="-1"></a>          <span class="dt">&quot;latitude&quot;</span><span class="fu">:</span> <span class="fu">{</span><span class="dt">&quot;type&quot;</span><span class="fu">:</span> <span class="st">&quot;float&quot;</span><span class="fu">,</span> <span class="dt">&quot;required&quot;</span><span class="fu">:</span> <span class="kw">true</span><span class="fu">},</span></span>
+<span id="cb13-20"><a href="#cb13-20" aria-hidden="true" tabindex="-1"></a>          <span class="dt">&quot;longitude&quot;</span><span class="fu">:</span> <span class="fu">{</span><span class="dt">&quot;type&quot;</span><span class="fu">:</span> <span class="st">&quot;float&quot;</span><span class="fu">,</span> <span class="dt">&quot;required&quot;</span><span class="fu">:</span> <span class="kw">true</span><span class="fu">}</span></span>
+<span id="cb13-21"><a href="#cb13-21" aria-hidden="true" tabindex="-1"></a>        <span class="fu">}</span></span>
+<span id="cb13-22"><a href="#cb13-22" aria-hidden="true" tabindex="-1"></a>      <span class="fu">}</span></span>
+<span id="cb13-23"><a href="#cb13-23" aria-hidden="true" tabindex="-1"></a>    <span class="fu">}</span></span>
+<span id="cb13-24"><a href="#cb13-24" aria-hidden="true" tabindex="-1"></a>  <span class="fu">},</span></span>
+<span id="cb13-25"><a href="#cb13-25" aria-hidden="true" tabindex="-1"></a>  <span class="dt">&quot;organizer_id&quot;</span><span class="fu">:</span> <span class="fu">{</span></span>
+<span id="cb13-26"><a href="#cb13-26" aria-hidden="true" tabindex="-1"></a>    <span class="dt">&quot;type&quot;</span><span class="fu">:</span> <span class="st">&quot;integer&quot;</span><span class="fu">,</span></span>
+<span id="cb13-27"><a href="#cb13-27" aria-hidden="true" tabindex="-1"></a>    <span class="dt">&quot;required&quot;</span><span class="fu">:</span> <span class="kw">true</span><span class="fu">,</span></span>
+<span id="cb13-28"><a href="#cb13-28" aria-hidden="true" tabindex="-1"></a>    <span class="dt">&quot;foreign_key&quot;</span><span class="fu">:</span> <span class="fu">{</span><span class="dt">&quot;entity&quot;</span><span class="fu">:</span> <span class="st">&quot;users&quot;</span><span class="fu">,</span> <span class="dt">&quot;field&quot;</span><span class="fu">:</span> <span class="st">&quot;user_id&quot;</span><span class="fu">}</span></span>
+<span id="cb13-29"><a href="#cb13-29" aria-hidden="true" tabindex="-1"></a>  <span class="fu">},</span></span>
+<span id="cb13-30"><a href="#cb13-30" aria-hidden="true" tabindex="-1"></a>  <span class="dt">&quot;attendees&quot;</span><span class="fu">:</span> <span class="fu">{</span></span>
+<span id="cb13-31"><a href="#cb13-31" aria-hidden="true" tabindex="-1"></a>    <span class="dt">&quot;type&quot;</span><span class="fu">:</span> <span class="st">&quot;json&quot;</span><span class="fu">,</span></span>
+<span id="cb13-32"><a href="#cb13-32" aria-hidden="true" tabindex="-1"></a>    <span class="dt">&quot;required&quot;</span><span class="fu">:</span> <span class="kw">false</span><span class="fu">,</span></span>
+<span id="cb13-33"><a href="#cb13-33" aria-hidden="true" tabindex="-1"></a>    <span class="dt">&quot;schema&quot;</span><span class="fu">:</span> <span class="fu">{</span></span>
+<span id="cb13-34"><a href="#cb13-34" aria-hidden="true" tabindex="-1"></a>      <span class="dt">&quot;max_capacity&quot;</span><span class="fu">:</span> <span class="fu">{</span><span class="dt">&quot;type&quot;</span><span class="fu">:</span> <span class="st">&quot;integer&quot;</span><span class="fu">,</span> <span class="dt">&quot;required&quot;</span><span class="fu">:</span> <span class="kw">true</span><span class="fu">},</span></span>
+<span id="cb13-35"><a href="#cb13-35" aria-hidden="true" tabindex="-1"></a>      <span class="dt">&quot;registered_count&quot;</span><span class="fu">:</span> <span class="fu">{</span><span class="dt">&quot;type&quot;</span><span class="fu">:</span> <span class="st">&quot;integer&quot;</span><span class="fu">,</span> <span class="dt">&quot;required&quot;</span><span class="fu">:</span> <span class="kw">true</span><span class="fu">},</span></span>
+<span id="cb13-36"><a href="#cb13-36" aria-hidden="true" tabindex="-1"></a>      <span class="dt">&quot;waitlist_count&quot;</span><span class="fu">:</span> <span class="fu">{</span><span class="dt">&quot;type&quot;</span><span class="fu">:</span> <span class="st">&quot;integer&quot;</span><span class="fu">,</span> <span class="dt">&quot;required&quot;</span><span class="fu">:</span> <span class="kw">false</span><span class="fu">}</span></span>
+<span id="cb13-37"><a href="#cb13-37" aria-hidden="true" tabindex="-1"></a>    <span class="fu">}</span></span>
+<span id="cb13-38"><a href="#cb13-38" aria-hidden="true" tabindex="-1"></a>  <span class="fu">},</span></span>
+<span id="cb13-39"><a href="#cb13-39" aria-hidden="true" tabindex="-1"></a>  <span class="dt">&quot;ticket_types&quot;</span><span class="fu">:</span> <span class="fu">{</span></span>
+<span id="cb13-40"><a href="#cb13-40" aria-hidden="true" tabindex="-1"></a>    <span class="dt">&quot;type&quot;</span><span class="fu">:</span> <span class="st">&quot;json&quot;</span><span class="fu">,</span></span>
+<span id="cb13-41"><a href="#cb13-41" aria-hidden="true" tabindex="-1"></a>    <span class="dt">&quot;required&quot;</span><span class="fu">:</span> <span class="kw">true</span><span class="fu">,</span></span>
+<span id="cb13-42"><a href="#cb13-42" aria-hidden="true" tabindex="-1"></a>    <span class="dt">&quot;schema&quot;</span><span class="fu">:</span> <span class="fu">{</span></span>
+<span id="cb13-43"><a href="#cb13-43" aria-hidden="true" tabindex="-1"></a>      <span class="dt">&quot;type&quot;</span><span class="fu">:</span> <span class="st">&quot;array&quot;</span><span class="fu">,</span></span>
+<span id="cb13-44"><a href="#cb13-44" aria-hidden="true" tabindex="-1"></a>      <span class="dt">&quot;items&quot;</span><span class="fu">:</span> <span class="fu">{</span></span>
+<span id="cb13-45"><a href="#cb13-45" aria-hidden="true" tabindex="-1"></a>        <span class="dt">&quot;type&quot;</span><span class="fu">:</span> <span class="st">&quot;json&quot;</span><span class="fu">,</span></span>
+<span id="cb13-46"><a href="#cb13-46" aria-hidden="true" tabindex="-1"></a>        <span class="dt">&quot;schema&quot;</span><span class="fu">:</span> <span class="fu">{</span></span>
+<span id="cb13-47"><a href="#cb13-47" aria-hidden="true" tabindex="-1"></a>          <span class="dt">&quot;name&quot;</span><span class="fu">:</span> <span class="fu">{</span><span class="dt">&quot;type&quot;</span><span class="fu">:</span> <span class="st">&quot;string&quot;</span><span class="fu">,</span> <span class="dt">&quot;required&quot;</span><span class="fu">:</span> <span class="kw">true</span><span class="fu">},</span></span>
+<span id="cb13-48"><a href="#cb13-48" aria-hidden="true" tabindex="-1"></a>          <span class="dt">&quot;price&quot;</span><span class="fu">:</span> <span class="fu">{</span><span class="dt">&quot;type&quot;</span><span class="fu">:</span> <span class="st">&quot;float&quot;</span><span class="fu">,</span> <span class="dt">&quot;required&quot;</span><span class="fu">:</span> <span class="kw">true</span><span class="fu">},</span></span>
+<span id="cb13-49"><a href="#cb13-49" aria-hidden="true" tabindex="-1"></a>          <span class="dt">&quot;available_quantity&quot;</span><span class="fu">:</span> <span class="fu">{</span><span class="dt">&quot;type&quot;</span><span class="fu">:</span> <span class="st">&quot;integer&quot;</span><span class="fu">,</span> <span class="dt">&quot;required&quot;</span><span class="fu">:</span> <span class="kw">true</span><span class="fu">}</span></span>
+<span id="cb13-50"><a href="#cb13-50" aria-hidden="true" tabindex="-1"></a>        <span class="fu">}</span></span>
+<span id="cb13-51"><a href="#cb13-51" aria-hidden="true" tabindex="-1"></a>      <span class="fu">}</span></span>
+<span id="cb13-52"><a href="#cb13-52" aria-hidden="true" tabindex="-1"></a>    <span class="fu">}</span></span>
+<span id="cb13-53"><a href="#cb13-53" aria-hidden="true" tabindex="-1"></a>  <span class="fu">},</span></span>
+<span id="cb13-54"><a href="#cb13-54" aria-hidden="true" tabindex="-1"></a>  <span class="dt">&quot;is_published&quot;</span><span class="fu">:</span> <span class="fu">{</span><span class="dt">&quot;type&quot;</span><span class="fu">:</span> <span class="st">&quot;boolean&quot;</span><span class="fu">,</span> <span class="dt">&quot;required&quot;</span><span class="fu">:</span> <span class="kw">true</span><span class="fu">},</span></span>
+<span id="cb13-55"><a href="#cb13-55" aria-hidden="true" tabindex="-1"></a>  <span class="dt">&quot;tags&quot;</span><span class="fu">:</span> <span class="fu">{</span><span class="dt">&quot;type&quot;</span><span class="fu">:</span> <span class="st">&quot;json&quot;</span><span class="fu">,</span> <span class="dt">&quot;required&quot;</span><span class="fu">:</span> <span class="kw">false</span><span class="fu">}</span></span>
+<span id="cb13-56"><a href="#cb13-56" aria-hidden="true" tabindex="-1"></a><span class="fu">}</span></span></code></pre></div>
+<p>These complex schema examples demonstrate the flexibility and power
+of rserv’s schema system, allowing for nested structures, arrays, and
+various data types to represent complex real-world data models.</p>
+<h3
+id="transitioning-from-schema-less-to-schema-enforced-mode">Transitioning
+from Schema-less to Schema-enforced Mode</h3>
+<ol type="1">
+<li>Start in schema-less mode for rapid prototyping.</li>
+<li>Once your data structure stabilizes, create a schema
+definition.</li>
+<li>Place the schema JSON files in
+<code>./schema/&lt;schema_name&gt;/</code>.</li>
+<li>Run rserv with the <code>--schema</code> argument to enforce the
+schema.</li>
+</ol>
+<h3 id="default-schema">Default Schema</h3>
+<ul>
+<li>If you create a schema named “default” in
+<code>./schema/default/</code>, it will be used when no
+<code>--schema</code> argument is provided.</li>
+<li>This allows for a smooth transition from schema-less to
+schema-enforced mode without changing how you run rserv.</li>
+</ul>
+<h3 id="referential-integrity">Referential Integrity</h3>
+<p>rserv provides basic referential integrity through its foreign key
+constraints and cascading delete feature. Here’s how it works:</p>
+<ol type="1">
+<li><p><strong>Foreign Key Validation</strong>: When creating or
+updating documents, rserv checks that any foreign key references point
+to existing documents.</p></li>
+<li><p><strong>Cascading Deletes</strong>: When enabled, deleting a
+document will also delete all documents that reference it through a
+foreign key.</p></li>
+<li><p><strong>Update Integrity</strong>: When updating a document,
+rserv ensures that the update doesn’t break existing foreign key
+relationships.</p></li>
+</ol>
+<p>Limitations: - rserv does not currently support deferred constraint
+checking or complex integrity rules. - There’s no built-in support for
+ON UPDATE actions (like CASCADE) for foreign keys.</p>
+<p>Best Practices: - Regularly run integrity checks on your data,
+especially after bulk operations. - Be cautious when using cascading
+deletes, as they can lead to unintended data loss. - Implement
+additional checks in your application logic for complex integrity
+requirements.</p>
+<h2 id="api-endpoints">6. API Endpoints</h2>
+<p>rserv provides a RESTful API with the following endpoints:</p>
+<h3 id="create-document">Create Document</h3>
+<ul>
+<li>Method: POST</li>
+<li>Endpoint: <code>/api/v1/&lt;entity&gt;</code></li>
+<li>Body: JSON object representing the document</li>
+<li>Response: 201 Created with the new document’s ID</li>
+</ul>
+<h3 id="get-document">Get Document</h3>
+<ul>
+<li>Method: GET</li>
+<li>Endpoint: <code>/api/v1/&lt;entity&gt;/&lt;id&gt;</code></li>
+<li>Response: 200 OK with the document data or 404 Not Found</li>
+</ul>
+<h3 id="update-document">Update Document</h3>
+<ul>
+<li>Method: PUT</li>
+<li>Endpoint: <code>/api/v1/&lt;entity&gt;/&lt;id&gt;</code></li>
+<li>Body: JSON object with updated document data</li>
+<li>Response: 200 OK or 404 Not Found</li>
+</ul>
+<h3 id="patch-document">Patch Document</h3>
+<ul>
+<li>Method: PATCH</li>
+<li>Endpoint: <code>/api/v1/&lt;entity&gt;/&lt;id&gt;</code></li>
+<li>Body: JSON object with fields to update</li>
+<li>Response: 200 OK with updated fields or 404 Not Found</li>
+</ul>
+<h3 id="delete-document">Delete Document</h3>
+<ul>
+<li>Method: DELETE</li>
+<li>Endpoint: <code>/api/v1/&lt;entity&gt;/&lt;id&gt;</code></li>
+<li>Response: 200 OK or 404 Not Found</li>
+</ul>
+<h3 id="list-documents">List Documents</h3>
+<ul>
+<li>Method: GET</li>
+<li>Endpoint: <code>/api/v1/&lt;entity&gt;/list</code></li>
+<li>Query Parameters:
+<ul>
+<li><code>page</code>: Page number (default: 1)</li>
+<li><code>per_page</code>: Items per page (default: configured
+default_page_size)</li>
+<li><code>sort</code>: Sorting parameters (e.g.,
+<code>field1:asc,field2:desc</code>)</li>
+</ul></li>
+<li>Response: 200 OK with paginated results and metadata</li>
+</ul>
+<h3 id="search-documents">Search Documents</h3>
+<ul>
+<li>Method: GET</li>
+<li>Endpoint: <code>/api/v1/&lt;entity&gt;/search</code></li>
+<li>Query Parameters:
+<ul>
+<li><code>query</code>: Search query string</li>
+<li><code>field</code>: Field to search in (default: ‘name’)</li>
+<li><code>page</code>: Page number (default: 1)</li>
+<li><code>per_page</code>: Items per page (default: configured
+default_page_size)</li>
+<li><code>sort</code>: Sorting parameters (e.g.,
+<code>field1:asc,field2:desc</code>)</li>
+</ul></li>
+<li>Response: 200 OK with paginated search results and metadata</li>
+</ul>
+<h3 id="save-document-create-with-specific-id">Save Document (Create
+with Specific ID)</h3>
+<ul>
+<li>Method: POST</li>
+<li>Endpoint: <code>/api/v1/&lt;entity&gt;/save/&lt;id&gt;</code></li>
+<li>Body: JSON object representing the document</li>
+<li>Response: 201 Created or 409 Conflict if the ID already exists</li>
+</ul>
+<h2 id="usage-examples">7. Usage Examples</h2>
+<h3 id="creating-a-document">Creating a Document</h3>
+<div class="sourceCode" id="cb14"><pre
+class="sourceCode bash"><code class="sourceCode bash"><span id="cb14-1"><a href="#cb14-1" aria-hidden="true" tabindex="-1"></a><span class="ex">curl</span> <span class="at">-X</span> POST http://localhost:9090/api/v1/users <span class="at">-H</span> <span class="st">&quot;Content-Type: application/json&quot;</span> <span class="at">-d</span> <span class="st">&#39;{&quot;name&quot;: &quot;John Doe&quot;, &quot;email&quot;: &quot;john@example.com&quot;}&#39;</span></span></code></pre></div>
+<p>Python:</p>
+<div class="sourceCode" id="cb15"><pre
+class="sourceCode python"><code class="sourceCode python"><span id="cb15-1"><a href="#cb15-1" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> requests</span>
+<span id="cb15-2"><a href="#cb15-2" aria-hidden="true" tabindex="-1"></a>requests.post(<span class="st">&#39;http://localhost:9090/api/v1/users&#39;</span>, json<span class="op">=</span>{<span class="st">&quot;name&quot;</span>: <span class="st">&quot;John Doe&quot;</span>, <span class="st">&quot;email&quot;</span>: <span class="st">&quot;john@example.com&quot;</span>})</span></code></pre></div>
+<h3 id="retrieving-a-document">Retrieving a Document</h3>
+<div class="sourceCode" id="cb16"><pre
+class="sourceCode bash"><code class="sourceCode bash"><span id="cb16-1"><a href="#cb16-1" aria-hidden="true" tabindex="-1"></a><span class="ex">curl</span> http://localhost:9090/api/v1/users/1</span></code></pre></div>
+<p>Python:</p>
+<div class="sourceCode" id="cb17"><pre
+class="sourceCode python"><code class="sourceCode python"><span id="cb17-1"><a href="#cb17-1" aria-hidden="true" tabindex="-1"></a>requests.get(<span class="st">&#39;http://localhost:9090/api/v1/users/1&#39;</span>).json()</span></code></pre></div>
+<h3 id="updating-a-document">Updating a Document</h3>
+<div class="sourceCode" id="cb18"><pre
+class="sourceCode bash"><code class="sourceCode bash"><span id="cb18-1"><a href="#cb18-1" aria-hidden="true" tabindex="-1"></a><span class="ex">curl</span> <span class="at">-X</span> PUT http://localhost:9090/api/v1/users/1 <span class="at">-H</span> <span class="st">&quot;Content-Type: application/json&quot;</span> <span class="at">-d</span> <span class="st">&#39;{&quot;name&quot;: &quot;John Smith&quot;, &quot;email&quot;: &quot;john.smith@example.com&quot;}&#39;</span></span></code></pre></div>
+<p>Python:</p>
+<div class="sourceCode" id="cb19"><pre
+class="sourceCode python"><code class="sourceCode python"><span id="cb19-1"><a href="#cb19-1" aria-hidden="true" tabindex="-1"></a>requests.put(<span class="st">&#39;http://localhost:9090/api/v1/users/1&#39;</span>, json<span class="op">=</span>{<span class="st">&quot;name&quot;</span>: <span class="st">&quot;John Smith&quot;</span>, <span class="st">&quot;email&quot;</span>: <span class="st">&quot;john.smith@example.com&quot;</span>})</span></code></pre></div>
+<h3 id="patching-a-document">Patching a Document</h3>
+<div class="sourceCode" id="cb20"><pre
+class="sourceCode bash"><code class="sourceCode bash"><span id="cb20-1"><a href="#cb20-1" aria-hidden="true" tabindex="-1"></a><span class="ex">curl</span> <span class="at">-X</span> PATCH http://localhost:9090/api/v1/users/1 <span class="at">-H</span> <span class="st">&quot;Content-Type: application/json&quot;</span> <span class="at">-d</span> <span class="st">&#39;{&quot;email&quot;: &quot;new.john@example.com&quot;}&#39;</span></span></code></pre></div>
+<p>Python:</p>
+<div class="sourceCode" id="cb21"><pre
+class="sourceCode python"><code class="sourceCode python"><span id="cb21-1"><a href="#cb21-1" aria-hidden="true" tabindex="-1"></a>requests.patch(<span class="st">&#39;http://localhost:9090/api/v1/users/1&#39;</span>, json<span class="op">=</span>{<span class="st">&quot;email&quot;</span>: <span class="st">&quot;new.john@example.com&quot;</span>})</span></code></pre></div>
+<h3 id="deleting-a-document">Deleting a Document</h3>
+<div class="sourceCode" id="cb22"><pre
+class="sourceCode bash"><code class="sourceCode bash"><span id="cb22-1"><a href="#cb22-1" aria-hidden="true" tabindex="-1"></a><span class="ex">curl</span> <span class="at">-X</span> DELETE http://localhost:9090/api/v1/users/1</span></code></pre></div>
+<p>Python:</p>
+<div class="sourceCode" id="cb23"><pre
+class="sourceCode python"><code class="sourceCode python"><span id="cb23-1"><a href="#cb23-1" aria-hidden="true" tabindex="-1"></a>requests.delete(<span class="st">&#39;http://localhost:9090/api/v1/users/1&#39;</span>)</span></code></pre></div>
+<h3 id="listing-documents">Listing Documents</h3>
+<div class="sourceCode" id="cb24"><pre
+class="sourceCode bash"><code class="sourceCode bash"><span id="cb24-1"><a href="#cb24-1" aria-hidden="true" tabindex="-1"></a><span class="ex">curl</span> <span class="st">&quot;http://localhost:9090/api/v1/users/list?page=1&amp;per_page=10&amp;sort=name:asc&quot;</span></span></code></pre></div>
+<p>Python:</p>
+<div class="sourceCode" id="cb25"><pre
+class="sourceCode python"><code class="sourceCode python"><span id="cb25-1"><a href="#cb25-1" aria-hidden="true" tabindex="-1"></a>requests.get(<span class="st">&#39;http://localhost:9090/api/v1/users/list&#39;</span>, params<span class="op">=</span>{<span class="st">&quot;page&quot;</span>: <span class="dv">1</span>, <span class="st">&quot;per_page&quot;</span>: <span class="dv">10</span>, <span class="st">&quot;sort&quot;</span>: <span class="st">&quot;name:asc&quot;</span>}).json()</span></code></pre></div>
+<h3 id="searching-documents">Searching Documents</h3>
+<div class="sourceCode" id="cb26"><pre
+class="sourceCode bash"><code class="sourceCode bash"><span id="cb26-1"><a href="#cb26-1" aria-hidden="true" tabindex="-1"></a><span class="ex">curl</span> <span class="st">&quot;http://localhost:9090/api/v1/users/search?query=john&amp;field=name&amp;page=1&amp;per_page=10&quot;</span></span></code></pre></div>
+<p>Python:</p>
+<div class="sourceCode" id="cb27"><pre
+class="sourceCode python"><code class="sourceCode python"><span id="cb27-1"><a href="#cb27-1" aria-hidden="true" tabindex="-1"></a>requests.get(<span class="st">&#39;http://localhost:9090/api/v1/users/search&#39;</span>, params<span class="op">=</span>{<span class="st">&quot;query&quot;</span>: <span class="st">&quot;john&quot;</span>, <span class="st">&quot;field&quot;</span>: <span class="st">&quot;name&quot;</span>, <span class="st">&quot;page&quot;</span>: <span class="dv">1</span>, <span class="st">&quot;per_page&quot;</span>: <span class="dv">10</span>}).json()</span></code></pre></div>
+<h3 id="saving-document-with-specific-id">Saving Document with Specific
+ID</h3>
+<div class="sourceCode" id="cb28"><pre
+class="sourceCode bash"><code class="sourceCode bash"><span id="cb28-1"><a href="#cb28-1" aria-hidden="true" tabindex="-1"></a><span class="ex">curl</span> <span class="at">-X</span> POST http://localhost:9090/api/v1/users/save/100 <span class="at">-H</span> <span class="st">&quot;Content-Type: application/json&quot;</span> <span class="at">-d</span> <span class="st">&#39;{&quot;name&quot;: &quot;Jane Doe&quot;, &quot;email&quot;: &quot;jane@example.com&quot;}&#39;</span></span></code></pre></div>
+<p>Python:</p>
+<div class="sourceCode" id="cb29"><pre
+class="sourceCode python"><code class="sourceCode python"><span id="cb29-1"><a href="#cb29-1" aria-hidden="true" tabindex="-1"></a>requests.post(<span class="st">&#39;http://localhost:9090/api/v1/users/save/100&#39;</span>, json<span class="op">=</span>{<span class="st">&quot;name&quot;</span>: <span class="st">&quot;Jane Doe&quot;</span>, <span class="st">&quot;email&quot;</span>: <span class="st">&quot;jane@example.com&quot;</span>})</span></code></pre></div>
+<p>These Python examples use the <code>requests</code> library, which
+provides a simple and intuitive API for making HTTP requests. To use
+these examples, ensure you have the <code>requests</code> library
+installed:</p>
+<div class="sourceCode" id="cb30"><pre
+class="sourceCode bash"><code class="sourceCode bash"><span id="cb30-1"><a href="#cb30-1" aria-hidden="true" tabindex="-1"></a><span class="ex">pip</span> install requests</span></code></pre></div>
+<h2 id="design-decisions">8. Design Decisions</h2>
+<p>rserv incorporates several specific design choices to balance
+flexibility, simplicity, and functionality. This section explains some
+key design decisions and their implications.</p>
+<h3 id="treatment-of-null-properties-in-patch-requests">Treatment of
+Null Properties in PATCH Requests</h3>
+<p>rserv offers configurable behavior for handling null values in PATCH
+requests:</p>
+<ol type="1">
+<li><p><strong>Store Null Values (Default)</strong>: When a property is
+set to null in a PATCH request, rserv will store this null value,
+effectively setting the property to null in the document.</p></li>
+<li><p><strong>Delete Null Properties</strong>: In this mode, if a
+property is set to null in a PATCH request, rserv will remove the
+property from the document entirely.</p></li>
+</ol>
+<p>This flexibility allows users to choose the behavior that best fits
+their application’s needs.</p>
+<h3 id="create-vs-save-endpoints">Create vs Save Endpoints</h3>
+<p>rserv provides two endpoints for creating new documents:</p>
+<ol type="1">
+<li><strong>Create Endpoint</strong>
+(<code>POST /api/v1/&lt;entity&gt;</code>):
+<ul>
+<li>Automatically generates a new, unique ID for the document.</li>
+<li>Returns a 201 Created status with the new ID.</li>
+<li>Will always create a new document, never overwrite an existing
+one.</li>
+</ul></li>
+<li><strong>Save Endpoint</strong>
+(<code>POST /api/v1/&lt;entity&gt;/save/&lt;id&gt;</code>):
+<ul>
+<li>Allows the client to specify the ID for the new document.</li>
+<li>Returns a 201 Created status if the document is new.</li>
+<li>Returns a 409 Conflict if a document with the specified ID already
+exists.</li>
+</ul></li>
+</ol>
+<p>The create endpoint is designed for general use, where the server
+manages ID assignment. The save endpoint is useful for scenarios where
+the client needs to control the ID, such as data migration or when
+implementing custom ID schemes.</p>
+<h3 id="file-based-storage">File-Based Storage</h3>
+<p>rserv uses a file-based storage system where each document is stored
+as a separate JSON file:</p>
+<p>Advantages: 1. Simplicity: Easy to implement and understand. 2.
+Direct Access: Documents can be easily inspected or modified directly on
+the file system. 3. No Database Setup: Removes the need for setting up
+and maintaining a separate database system.</p>
+<p>Limitations: 1. Scalability: Not suitable for very large datasets or
+high-concurrency environments. 2. Query Performance: Complex queries or
+full-text searches require scanning all documents. 3. Lack of
+Transactions: No support for atomic operations across multiple
+documents.</p>
+<p>This design makes rserv excellent for prototyping and small-scale
+applications but may not be suitable for large-scale production use
+without modifications.</p>
+<h3 id="schema-flexibility">Schema Flexibility</h3>
+<p>rserv’s design allows for flexible schema management:</p>
+<ol type="1">
+<li><strong>Schema-less Operation</strong>: Allows for rapid prototyping
+and evolving data structures.</li>
+<li><strong>Schema Enforcement</strong>: Provides data consistency when
+the structure is stable.</li>
+<li><strong>Easy Transition</strong>: Smooth pathway from schema-less to
+schema-enforced operation.</li>
+<li><strong>Multiple Schemas</strong>: Support for different schemas,
+enabling management of multiple projects or data models.</li>
+</ol>
+<p>This flexibility makes rserv suitable for various stages of
+development, from initial concept to more structured data
+management.</p>
+<h3 id="cascading-deletes">Cascading Deletes</h3>
+<p>rserv includes an optional cascading delete feature for maintaining
+referential integrity. When enabled, deleting a document will also
+delete all documents that reference it through a foreign key.</p>
+<p><strong>Warning</strong>: Use cascading deletes with caution. This
+feature can lead to unintended data loss if not carefully managed.
+Always ensure you understand the relationships between your documents
+and the potential impact of deletions before enabling this feature.</p>
+<h3 id="sorting-limitations">Sorting Limitations</h3>
+<p>rserv’s sorting functionality has some limitations to be aware
+of:</p>
+<ol type="1">
+<li><p><strong>Mixed Data Types</strong>: Sorting fields containing
+mixed data types (e.g., strings and numbers) may not produce expected
+results. It’s recommended to maintain consistent data types within
+sortable fields.</p></li>
+<li><p><strong>Multi-field Sorting</strong>: While basic multi-field
+sorting is supported, complex nested sorting scenarios may not be
+available.</p></li>
+<li><p><strong>Case Sensitivity</strong>: String sorting is
+case-insensitive by default.</p></li>
+</ol>
+<p>These limitations are in place to maintain simplicity and performance
+in a prototyping environment. For more complex sorting requirements,
+consider implementing additional logic in your application.</p>
+<h2 id="data-storage-and-management">9. Data Storage and Management</h2>
+<p>rserv uses a file-based storage system: - In schema-less mode, data
+is stored in <code>./data/default/&lt;entity&gt;/</code>. - In
+schema-enforced mode, data is stored in
+<code>./data/&lt;schema_name&gt;/&lt;entity&gt;/</code>. - Individual
+documents are stored as JSON files, named by their ID. - A special
+<code>_next_id.txt</code> file in each entity directory manages
+auto-incrementing IDs.</p>
+<p>This structure allows for easy inspection and manipulation of data,
+while keeping data from different schemas separate.</p>
+<h2 id="performance-considerations">10. Performance Considerations</h2>
+<p>While rserv is primarily designed for prototyping and development,
+here are some performance characteristics to keep in mind:</p>
+<ol type="1">
+<li><strong>File I/O</strong>: Each request typically involves at least
+one file I/O operation, which can be a performance bottleneck,
+especially for writes.</li>
+<li><strong>Caching</strong>: In-memory caching can significantly
+improve read performance for repeated queries.</li>
+<li><strong>Search Operations</strong>: Full-text search requires
+scanning all documents, which can be slow for large datasets.</li>
+<li><strong>Pagination</strong>: Use pagination for large datasets to
+improve response times and reduce memory usage.</li>
+</ol>
+<p>For most prototyping and development scenarios, these performance
+characteristics should be sufficient. However, for high-performance
+needs or large-scale applications, consider transitioning to a more
+robust database system.</p>
+<h3 id="caching-in-rserv">Caching in rserv</h3>
+<p>It’s important to note that caching in rserv is designed primarily to
+emulate the behavior of a production system during prototyping, rather
+than for significant performance optimization. The simple in-memory
+cache helps to:</p>
+<ol type="1">
+<li>Demonstrate how caching affects API responses in a real-world
+scenario.</li>
+<li>Provide a basic performance boost for frequently accessed, static
+data.</li>
+<li>Allow developers to test and design around cache invalidation
+scenarios.</li>
+</ol>
+<p>Remember that rserv’s caching is not designed to handle large-scale,
+high-performance requirements. For production use, you would typically
+implement a more robust caching solution.</p>
+<h2 id="security-notes">11. Security Notes</h2>
+<p>rserv is designed for rapid prototyping and development, and as such,
+it does not include built-in security features. When using rserv,
+consider the following security aspects:</p>
+<ol type="1">
+<li><strong>Authentication</strong>: rserv does not provide
+authentication out of the box. If you need to restrict access, implement
+authentication at the application level.</li>
+<li><strong>Authorization</strong>: There’s no built-in mechanism for
+controlling access to specific resources.</li>
+<li><strong>Data Encryption</strong>: Data is stored as plain JSON
+files. Do not store sensitive information without additional security
+measures.</li>
+<li><strong>Input Validation</strong>: While rserv performs basic schema
+validation when a schema is defined, implement thorough input validation
+in your application.</li>
+<li><strong>Network Security</strong>: By default, rserv binds to all
+network interfaces (0.0.0.0). In production-like environments, consider
+binding to specific interfaces and using HTTPS.</li>
+</ol>
+<p>Always assess the security requirements of your project and implement
+additional security measures as needed when using rserv in anything
+resembling a production environment.</p>
+<h2 id="troubleshooting">12. Troubleshooting</h2>
+<p>If you encounter issues while using rserv, here are some common
+problems and their solutions:</p>
+<ol type="1">
+<li><strong>Server won’t start</strong>:
+<ul>
+<li>Ensure Python 3.7+ is installed and in your PATH.</li>
+<li>Check if the specified port is already in use.</li>
+<li>Verify you have write permissions in the directory where rserv is
+running.</li>
+</ul></li>
+<li><strong>Dependencies missing</strong>:
+<ul>
+<li>Run <code>pip install flask python-dotenv</code> to install required
+packages.</li>
+</ul></li>
+<li><strong>Configuration not applied</strong>:
+<ul>
+<li>Check the order of precedence: command-line args &gt; env vars &gt;
+config file &gt; defaults.</li>
+<li>Ensure your .env or config file is in the correct location.</li>
+</ul></li>
+<li><strong>“Entity not found” errors</strong>:
+<ul>
+<li>Ensure you’re using the correct entity name in your requests.</li>
+<li>Check if the entity directory exists in the rserv data folder.</li>
+</ul></li>
+<li><strong>Unexpected data behavior</strong>:
+<ul>
+<li>If running in schema-less mode, remember that rserv doesn’t enforce
+a schema. Client-side validation is crucial.</li>
+<li>Check how null values are handled in PATCH requests based on your
+configuration.</li>
+</ul></li>
+<li><strong>Search not working as expected</strong>:
+<ul>
+<li>Verify that you’re searching in the correct field.</li>
+<li>Remember that search is case-insensitive but requires an exact match
+within the field.</li>
+</ul></li>
+<li><strong>Schema validation errors</strong>:
+<ul>
+<li>Double-check that your data matches the schema definition.</li>
+<li>Ensure all required fields are provided and that data types are
+correct.</li>
+<li>For nested structures, verify that all levels of the data conform to
+the schema.</li>
+</ul></li>
+<li><strong>Foreign key constraint violations</strong>:
+<ul>
+<li>Ensure the referenced document exists before creating or updating a
+document with a foreign key.</li>
+<li>When using cascading deletes, be aware of the potential for
+unexpected deletions.</li>
+</ul></li>
+<li><strong>Sorting issues</strong>:
+<ul>
+<li>Remember the limitations of sorting with mixed data types.</li>
+<li>For multi-field sorting, ensure the sort parameter is correctly
+formatted.</li>
+</ul></li>
+<li><strong>Unexpected null values</strong>:
+<ul>
+<li>Check your configuration for handling null values in PATCH requests
+(‘store’ vs ‘delete’ mode).</li>
+</ul></li>
+</ol>
+<p>If you continue to experience issues, check the server logs for more
+detailed error messages. If the problem persists, consider reporting the
+issue to the rserv maintainers with a detailed description of the
+problem and steps to reproduce it.</p>
+<h2 id="best-practices">13. Best Practices</h2>
+<p>To get the most out of rserv, consider following these best
+practices:</p>
+<ol type="1">
+<li><strong>Data Modeling</strong>:
+<ul>
+<li>Keep your document structures consistent within each entity.</li>
+<li>Use meaningful and consistent field names across your
+documents.</li>
+</ul></li>
+<li><strong>Schema Design</strong>:
+<ul>
+<li>Start in schema-less mode for rapid prototyping.</li>
+<li>Transition to a schema-enforced mode as your data model
+stabilizes.</li>
+<li>Use foreign key constraints to maintain data integrity between
+related entities.</li>
+</ul></li>
+<li><strong>ID Management</strong>:
+<ul>
+<li>Let rserv manage IDs when possible, using the create endpoint
+instead of save.</li>
+<li>If using custom IDs, ensure they are unique within each entity.</li>
+</ul></li>
+<li><strong>Query Optimization</strong>:
+<ul>
+<li>Use pagination for large datasets to improve response times and
+reduce server load.</li>
+<li>Leverage sorting capabilities to retrieve data in the most useful
+order.</li>
+</ul></li>
+<li><strong>Caching</strong>:
+<ul>
+<li>Adjust the cache TTL based on your data’s rate of change.</li>
+<li>For frequently accessed, rarely changed data, consider longer cache
+durations.</li>
+</ul></li>
+<li><strong>Error Handling</strong>:
+<ul>
+<li>Implement robust error handling in your client applications.</li>
+<li>Always check HTTP status codes and handle errors appropriately.</li>
+</ul></li>
+<li><strong>Data Validation</strong>:
+<ul>
+<li>Implement thorough client-side validation before sending data to
+rserv.</li>
+<li>Use schema validation in rserv to ensure data integrity.</li>
+</ul></li>
+<li><strong>Backup</strong>:
+<ul>
+<li>Regularly backup your rserv data directory.</li>
+<li>Consider putting your schema definitions under version control.</li>
+</ul></li>
+<li><strong>Monitoring</strong>:
+<ul>
+<li>Keep an eye on disk usage, especially for entities with large
+documents or high write volumes.</li>
+<li>Monitor server logs for any recurring errors or performance
+issues.</li>
+</ul></li>
+<li><strong>Cascading Deletes</strong>:
+<ul>
+<li>Use cascading deletes cautiously to avoid unintended data loss.</li>
+<li>Thoroughly test cascading delete behavior in a safe environment
+before enabling it.</li>
+</ul></li>
+<li><strong>Schema Management</strong>:
+<ul>
+<li>Use the <code>--list-schemas</code> option to keep track of
+available schemas in your project.</li>
+<li>Maintain clear documentation for each schema, especially when
+managing multiple schemas for different purposes or stages of
+development.</li>
+</ul></li>
+<li><strong>Data Integrity</strong>:
+<ul>
+<li>Regularly perform manual integrity checks, especially after bulk
+operations or when recovering from errors.</li>
+<li>Be aware of rserv’s limitations in terms of data consistency and
+plan accordingly for data-critical operations.</li>
+</ul></li>
+</ol>
+<h2 id="frequently-asked-questions">14. Frequently Asked Questions</h2>
+<ol type="1">
+<li><p><strong>Q: How does rserv handle concurrent writes to the same
+document?</strong> A: rserv uses file locking for ID generation but
+doesn’t have built-in concurrency control for document writes. The last
+write operation will generally overwrite previous ones.</p></li>
+<li><p><strong>Q: Can I use rserv with multiple programming
+languages?</strong> A: Yes, rserv provides a RESTful API that can be
+accessed from any programming language capable of making HTTP
+requests.</p></li>
+<li><p><strong>Q: How can I backup my rserv data?</strong> A: Since
+rserv uses a file-based storage system, you can backup data by copying
+the entire <code>data</code> directory. Ensure rserv is not writing data
+during the backup process.</p></li>
+<li><p><strong>Q: Does rserv support full-text search?</strong> A: rserv
+provides basic search functionality, but it’s not optimized for
+full-text search. For advanced search capabilities, consider integrating
+a dedicated search engine.</p></li>
+<li><p><strong>Q: Can I use rserv in a production environment?</strong>
+A: rserv is primarily designed for prototyping and development. While it
+can be used in small-scale production scenarios, it’s not recommended
+for high-traffic or data-critical production environments without
+significant modifications.</p></li>
+<li><p><strong>Q: How can I migrate from rserv to a production
+database?</strong> A: You can use rserv’s API to retrieve all data and
+then write scripts to insert this data into your production database.
+Consider using the schema definitions as a guide for creating your
+production database schema.</p></li>
+<li><p><strong>Q: Does rserv support transactions?</strong> A: No, rserv
+does not support transactions. Each operation is handled
+independently.</p></li>
+<li><p><strong>Q: Can I use rserv with Docker?</strong> A: While rserv
+doesn’t come with built-in Docker support, you can create a Dockerfile
+to containerize rserv. Ensure you map the necessary volumes for data
+persistence.</p></li>
+<li><p><strong>Q: How does rserv handle large documents?</strong> A:
+rserv can handle documents of any size that can fit in memory. However,
+very large documents may impact performance, especially during search
+operations.</p></li>
+<li><p><strong>Q: Can I extend rserv’s functionality?</strong> A: Yes,
+since rserv is open-source, you can modify or extend its functionality.
+However, consider maintaining a separate fork if you make significant
+changes.</p></li>
+</ol>
+<h2 id="glossary">15. Glossary</h2>
+<ul>
+<li><strong>Entity</strong>: A category or type of data, similar to a
+table in a relational database.</li>
+<li><strong>Document</strong>: An individual data record within an
+entity, stored as a JSON file.</li>
+<li><strong>Schema</strong>: A JSON file defining the structure and
+constraints for documents within an entity.</li>
+<li><strong>Foreign Key</strong>: A field in one entity that refers to
+the primary key of another entity, establishing a relationship between
+them.</li>
+<li><strong>Cascading Delete</strong>: The automatic deletion of related
+documents when a referenced document is deleted.</li>
+<li><strong>TTL (Time To Live)</strong>: The duration for which a cached
+item remains valid.</li>
+<li><strong>CRUD</strong>: Create, Read, Update, Delete - the four basic
+operations performed on data.</li>
+<li><strong>REST</strong>: Representational State Transfer, an
+architectural style for designing networked applications.</li>
+<li><strong>JSON</strong>: JavaScript Object Notation, a lightweight
+data interchange format used by rserv for data storage and
+communication.</li>
+<li><strong>Pagination</strong>: The practice of dividing a large set of
+results into smaller, manageable “pages” of data.</li>
+<li><strong>Query Parameter</strong>: Additional parameters sent with a
+URL to modify the request or response.</li>
+<li><strong>HTTP Method</strong>: The type of request sent to the server
+(e.g., GET, POST, PUT, PATCH, DELETE).</li>
+<li><strong>Endpoint</strong>: A specific URL in the API that represents
+an object or collection of objects.</li>
+<li><strong>Schema-less Mode</strong>: Operating without a predefined
+data structure, allowing flexible document shapes.</li>
+<li><strong>Schema-enforced Mode</strong>: Operating with a predefined
+schema, ensuring data consistency and structure.</li>
+<li><strong>Referential Integrity</strong>: Ensuring that relationships
+between entities remain consistent.</li>
+</ul>
+<p>This concludes the comprehensive user manual for rserv version 0.2.1.
+The manual covers all aspects of installation, configuration, usage, and
+best practices for this REST prototyping server. As rserv continues to
+evolve, always refer to the latest documentation for the most up-to-date
+information.</p>
