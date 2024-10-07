@@ -1,4 +1,5 @@
-# rserv is a lightweight prototyping REST server
+# rserv 
+_a lightweight prototyping REST server_
 
 rserv is a simple, flexible, and lightweight REST prototyping server designed for rapid development and data exploration. It provides an easy-to-use interface for managing data using a document-oriented approach, enabling you to build REST APIs and experiment with data structures quickly.
 
